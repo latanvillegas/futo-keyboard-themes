@@ -17,6 +17,7 @@ on:
       - 'tools/build_aero_mint_26_dark.py'
       - 'tools/build_obsidian_bloom_26.py'
       - 'tools/build_neon_orchid_studio_26.py'
+      - 'tools/build_celestial_koi_26.py'
       - 'requirements.txt'
       - '.github/workflows/build-themes.yml'
   release:
@@ -48,6 +49,7 @@ jobs:
           python tools/build_aero_mint_26_dark.py
           python tools/build_obsidian_bloom_26.py
           python tools/build_neon_orchid_studio_26.py
+          python tools/build_celestial_koi_26.py
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -64,7 +66,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.event.release.tag_name }}" dist/*.zip --clobber
-      - name: Manually sync approved ZIPs to an existing release
+      - name: Manually sync ZIPs to an existing release
         if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
