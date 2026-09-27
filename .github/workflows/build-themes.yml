@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Existing release tag to update (leave empty for artifacts only)'
+        description: 'Existing release tag to update (defaults to v1.0.0)'
         required: false
-        default: ''
+        default: 'v1.0.0'
         type: string
   push:
     branches: [main]
@@ -46,13 +46,19 @@ jobs:
           path: dist/*.zip
           if-no-files-found: error
 
+      - name: Sync ZIPs to v1.0.0 after changes on main
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v1.0.0" dist/*.zip --clobber
+
       - name: Attach ZIPs to newly published release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.event.release.tag_name }}" dist/*.zip --clobber
 
-      - name: Replace ZIPs in existing release
+      - name: Manually sync ZIPs to an existing release
         if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
