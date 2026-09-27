@@ -42,6 +42,7 @@ jobs:
           python tools/build_aurora_glass_26.py
           python tools/build_liquid_prism_26.py
           python tools/build_solar_flare_26.py
+          python tools/build_aero_mint_26_dark.py
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
