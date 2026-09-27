@@ -41,6 +41,7 @@ jobs:
           python tools/build_themes.py
           python tools/build_velvet_editorial.py
           python tools/build_gen2_themes.py
+          python tools/fix_gen2_schema.py
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
