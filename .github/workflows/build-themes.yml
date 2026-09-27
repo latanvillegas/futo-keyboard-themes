@@ -26,16 +26,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
-
       - name: Install dependencies
         run: pip install -r requirements.txt
-
       - name: Build themes
         run: |
           python tools/build_themes.py
@@ -43,26 +40,23 @@ jobs:
           python tools/build_gen2_themes.py
           python tools/fix_gen2_schema.py
           python tools/build_aurora_glass_26.py
-
+          python tools/build_liquid_prism_26.py
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: futo-keyboard-themes
           path: dist/*.zip
           if-no-files-found: error
-
       - name: Sync ZIPs to v1.0.0 after changes on main
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "v1.0.0" dist/*.zip --clobber
-
       - name: Attach ZIPs to newly published release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.event.release.tag_name }}" dist/*.zip --clobber
-
       - name: Manually sync ZIPs to an existing release
         if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
         env:
