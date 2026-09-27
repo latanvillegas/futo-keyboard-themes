@@ -2,6 +2,12 @@ name: Build FUTO themes
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing release tag to update (leave empty for artifacts only)'
+        required: false
+        default: ''
+        type: string
   push:
     branches: [main]
     paths:
@@ -40,8 +46,14 @@ jobs:
           path: dist/*.zip
           if-no-files-found: error
 
-      - name: Attach ZIPs to published release
+      - name: Attach ZIPs to newly published release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.event.release.tag_name }}" dist/*.zip --clobber
+
+      - name: Replace ZIPs in existing release
+        if: github.event_name == 'workflow_dispatch' && inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.release_tag }}" dist/*.zip --clobber
