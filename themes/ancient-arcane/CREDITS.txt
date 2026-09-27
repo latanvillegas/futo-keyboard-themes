@@ -1,0 +1,12 @@
+ANCIENT ARCANE — CREDITS
+
+Theme name: Ancient Arcane
+Theme design, original visual assets and configuration:
+Latan Villegas
+Copyright (c) 2026 Latan Villegas.
+
+Third-party font:
+ArcaneSerif.ttf is an unmodified copy of DejaVu Serif Condensed.
+DejaVu fonts are derived from Bitstream Vera and have their own permissive license terms. The original font license must be preserved with distributions containing the font.
+
+No third-party font authorship is claimed by Latan Villegas.
