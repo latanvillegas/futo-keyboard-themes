@@ -1,0 +1,23 @@
+from pathlib import Path
+from PIL import Image, ImageDraw, ImageFilter
+import zipfile, math
+ROOT=Path(__file__).resolve().parents[1]; OUT=ROOT/'build'/'liquid-prism-26'; DIST=ROOT/'dist'; OUT.mkdir(parents=True,exist_ok=True); DIST.mkdir(exist_ok=True)
+W,H=1440,900;base=Image.new('RGBA',(W,H),(3,5,14,255));layer=Image.new('RGBA',(W,H),(0,0,0,0));d=ImageDraw.Draw(layer)
+for color,y0,freq in [((75,235,255,62),135,.0041),((170,90,255,58),285,.0035),((255,70,190,48),455,.0047)]: d.line([(x,y0+85*math.sin(x*freq)) for x in range(-100,W+101,18)],fill=color,width=150,joint='curve')
+for box,color in [((900,-120,1550,520),(100,210,255,42)),((-220,480,520,1180),(198,80,255,38)),((530,500,1130,1060),(255,75,180,30))]: d.ellipse(box,fill=color)
+layer=layer.filter(ImageFilter.GaussianBlur(55));Image.alpha_composite(base,layer).convert('RGB').save(OUT/'liquid-prism-background.webp','WEBP',quality=95,method=6)
+def key(name,fill,edge,pressed=False):
+ w,h,s=128,140,4;im=Image.new('RGBA',(w*s,h*s),(0,0,0,0));dr=ImageDraw.Draw(im)
+ if pressed:dr.rounded_rectangle((5*s,9*s,(w-3)*s,(h-2)*s),29*s,fill=(70,235,255,30))
+ dr.rounded_rectangle((7*s,7*s,(w-7)*s,(h-7)*s),27*s,fill=fill,outline=edge,width=2*s);dr.rounded_rectangle((11*s,11*s,(w-11)*s,(h-11)*s),23*s,outline=(255,255,255,38),width=s);dr.arc((17*s,14*s,(w-17)*s,68*s),195,342,fill=(255,255,255,125),width=2*s);im.resize((w,h),Image.Resampling.LANCZOS).save(OUT/name)
+key('prism-normal.png',(10,18,38,205),(103,218,255,220));key('prism-functional.png',(23,20,51,225),(181,115,255,235));key('prism-action.png',(20,91,112,235),(105,255,230,255));key('prism-pressed.png',(31,92,128,245),(135,255,239,255),True);key('prism-popup.png',(55,28,83,244),(235,131,255,255))
+c={'primary':'#71FFE7','on_primary':'#00201B','primary_container':'#0B514C','on_primary_container':'#B9FFF3','inverse_primary':'#006B5F','secondary':'#86D8FF','on_secondary':'#001E2C','secondary_container':'#174A60','on_secondary_container':'#C8EDFF','tertiary':'#D2A6FF','on_tertiary':'#260047','tertiary_container':'#542A75','on_tertiary_container':'#F0DBFF','error':'#FFB4AB','on_error':'#690005','error_container':'#93000A','on_error_container':'#FFDAD6','background':'#03050E','on_background':'#E8F5FF','surface':'#050814','on_surface':'#E8F5FF','surface_variant':'#18233A','on_surface_variant':'#C8D5E8','outline':'#78DDF4','outline_variant':'#3A4D68','scrim':'#000000','inverse_surface':'#E8F5FF','inverse_on_surface':'#14202E','surface_tint':'#71FFE7','surface_dim':'#01030A','surface_bright':'#29374D','surface_container_lowest':'#010208','surface_container_low':'#080E1B','surface_container':'#0D1626','surface_container_high':'#142036','surface_container_highest':'#1C2A43','keyboard_surface':'#03050E','keyboard_surface_dim':'#01030A','keyboard_container':'#0C1628','keyboard_container_variant':'#192A46','on_keyboard_container':'#F2FAFF','keyboard_press':'#71FFE7','keyboard_container_pressed':'#1C7187','on_keyboard_container_pressed':'#FFFFFF'}
+lines=['name = "Liquid Prism 26"','author = "Latan Villegas"','id = "com.latanvillegas.liquidprism26"','version = 1','description = "Premium liquid prism glass theme."','','[options]','auto_borders = true','center_hints = false','roundedness = 1.0','scale_text = 1.02','scale_hints = 0.90','weight_text = 500','weight_hints = 480','','[colors]']+[f'{k} = "{v}"' for k,v in c.items()]+['','[options.background]','image = "liquid-prism-background.webp"','opacity = 0.97','action_bar_opacity = 0.74','cropping = [0, 0, 1, 1]']
+for sel,a in [('pressed','prism-pressed.png'),('popup','prism-popup.png'),('action','prism-action.png'),('functional','prism-functional.png'),('spacebar','prism-normal.png'),('normal','prism-normal.png')]:lines+=['','[[matchrules.border]]',f'selector = "{sel}"',f'asset = "{a}"']
+for a in ['prism-normal.png','prism-functional.png','prism-action.png','prism-pressed.png','prism-popup.png']:lines+=['','[[asset.border]]',f'name = "{a}"','background_tint = "#FFFFFFFF"','foreground_tint = "#FFFFFFFF"','padding = [0.055, 0.05, 0.945, 0.95]','slicing = [0.30, 0.28, 0.70, 0.72]','gap = [0.025, 0.02, 0.975, 0.98]','target_density = 320']
+(OUT/'theme.txt').write_text('\n'.join(lines)+'\n');(OUT/'CREDITS.txt').write_text('Liquid Prism 26\nOriginal theme concept, background and key assets: Latan Villegas\n');(OUT/'LICENSE.txt').write_text('Copyright (c) 2026 Latan Villegas. Permission is granted to use, copy, modify and redistribute with attribution.\n')
+z=DIST/'liquid-prism-26-FUTO.zip';z.unlink(missing_ok=True)
+with zipfile.ZipFile(z,'w',zipfile.ZIP_DEFLATED) as f:
+ for p in OUT.iterdir():
+  if p.is_file():f.write(p,p.name)
+print('Built',z)
