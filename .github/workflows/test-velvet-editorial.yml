@@ -1,0 +1,42 @@
+name: Test Velvet Editorial
+
+on:
+  push:
+    branches: [theme/velvet-editorial]
+    paths:
+      - 'tools/build_velvet_editorial.py'
+      - '.github/workflows/test-velvet-editorial.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install Pillow
+      - name: Build Velvet Editorial
+        run: python tools/build_velvet_editorial.py
+      - name: Validate ZIP contents
+        run: |
+          python - <<'PY'
+          import zipfile
+          p='dist/velvet-editorial-FUTO.zip'
+          required={'theme.txt','background.webp','normal.png','functional.png','action.png','pressed.png','popup.png','CormorantGaramond-Regular.ttf','OFL-CormorantGaramond.txt','CREDITS.txt','LICENSE.txt'}
+          with zipfile.ZipFile(p) as z:
+              names=set(z.namelist())
+              missing=required-names
+              assert not missing, f'Missing: {sorted(missing)}'
+              theme=z.read('theme.txt').decode()
+              assert '[options.font]' in theme
+              assert 'font = "CormorantGaramond-Regular.ttf"' in theme
+              assert '[options.background]' in theme
+              assert theme.count('[[matchrules.border]]') >= 6
+          print('Velvet Editorial ZIP validated')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: velvet-editorial-FUTO
+          path: dist/velvet-editorial-FUTO.zip
