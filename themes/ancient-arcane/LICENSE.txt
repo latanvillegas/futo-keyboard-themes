@@ -1,0 +1,11 @@
+ANCIENT ARCANE THEME LICENSE v1.0
+
+Copyright (c) 2026 Latan Villegas. All rights reserved.
+
+This license applies only to the original Ancient Arcane theme artwork, configuration, icons, backgrounds, and other original visual assets authored for this theme.
+
+Permission is granted to use this theme for personal, non-commercial use and to make private modifications. Redistribution, publication, sale, sublicensing, or commercial use of the original theme or modified versions requires prior permission from Latan Villegas.
+
+Third-party components are NOT covered by this license. They remain under their respective original licenses and copyright notices. See CREDITS.txt and the files in fonts/ for details.
+
+THE THEME IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
