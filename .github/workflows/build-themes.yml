@@ -19,6 +19,7 @@ on:
       - 'tools/build_neon_orchid_studio_26.py'
       - 'tools/build_celestial_koi_26.py'
       - 'tools/build_nova_flora_atelier_26.py'
+      - 'tools/build_aurora_night_26_amoled.py'
       - 'requirements.txt'
       - '.github/workflows/build-themes.yml'
   release:
@@ -40,6 +41,8 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: pip install -r requirements.txt
+      - name: Preserve Aurora Candy base
+        run: cp dist/aurora-candy-26-premium-FUTO.zip /tmp/aurora-candy-26-premium-FUTO.zip.b64
       - name: Build approved themes only
         run: |
           rm -rf dist
@@ -52,6 +55,7 @@ jobs:
           python tools/build_neon_orchid_studio_26.py
           python tools/build_celestial_koi_26.py
           python tools/build_nova_flora_atelier_26.py
+          python tools/build_aurora_night_26_amoled.py
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
