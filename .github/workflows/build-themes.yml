@@ -30,6 +30,9 @@ permissions:
 
 jobs:
   build:
+    # The curated V1.1.0 release must contain only its two verified 3D themes.
+    # Preserve the historical V1.0.0 build/release behavior for every other event.
+    if: ${{ !(github.event_name == 'release' && github.event.release.tag_name == 'v1.1.0') && !(github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-3d-only]')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -77,3 +80,91 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ inputs.release_tag }}" dist/*.zip --clobber
+
+  publish_3d_v1_1_0:
+    name: Publish curated 3D themes v1.1.0
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-3d-only]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout versioned ZIPs and detailed release notes
+        uses: actions/checkout@v4
+
+      - name: Validate both ZIPs, TOML metadata and SHA-256
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s docs/releases/v1.1.0-aurora-obsidian-3d.md
+          test -s dist/THEMES_SHA256SUMS
+          (
+            cd dist
+            sha256sum --check THEMES_SHA256SUMS
+          )
+          python3 - <<'PY'
+          import tomllib
+          import zipfile
+          from pathlib import Path
+
+          entries = [
+              ("Aurora_3D_V9_Colores_Teclado.zip", 9, 1257042),
+              ("Obsidian3DTactile_FUTO_Original_Actualizado.zip", 2, 89125),
+          ]
+          for name, version, expected_size in entries:
+              path = Path("dist") / name
+              if path.stat().st_size != expected_size:
+                  raise RuntimeError(f"{name}: unexpected byte count")
+              with zipfile.ZipFile(path) as archive:
+                  names = archive.namelist()
+                  if len(names) != len(set(names)) or "theme.txt" not in names:
+                      raise RuntimeError(f"{name}: invalid or duplicate ZIP entries")
+                  bad = archive.testzip()
+                  if bad is not None:
+                      raise RuntimeError(f"{name}: corrupted entry {bad}")
+                  metadata = tomllib.loads(archive.read("theme.txt").decode("utf-8"))
+                  if metadata.get("version") != version:
+                      raise RuntimeError(f"{name}: unexpected theme version")
+                  print(f"{name}: verified {len(names)} entries, version {version}")
+          PY
+
+      - name: Publish new GitHub Release v1.1.0 with both ZIP assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "v1.1.0" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release v1.1.0 already exists; will verify rather than overwrite."
+          else
+            gh release create "v1.1.0" \
+              dist/Aurora_3D_V9_Colores_Teclado.zip \
+              dist/Obsidian3DTactile_FUTO_Original_Actualizado.zip \
+              dist/THEMES_SHA256SUMS \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "FUTO Keyboard Themes v1.1.0 — Aurora 3D V9 + Obsidian 3D V2" \
+              --notes-file docs/releases/v1.1.0-aurora-obsidian-3d.md \
+              --latest
+          fi
+
+      - name: Confirm published Release and required downloads
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view "v1.1.0" --repo "$GITHUB_REPOSITORY" \
+            --json assets,isDraft,isPrerelease,tagName,url \
+            | jq -e '
+                (.tagName == "v1.1.0") and
+                (.isDraft == false) and
+                (.isPrerelease == false) and
+                ([.assets[].name] | sort == ([
+                   "Aurora_3D_V9_Colores_Teclado.zip",
+                   "Obsidian3DTactile_FUTO_Original_Actualizado.zip",
+                   "THEMES_SHA256SUMS"
+                 ] | sort))
+              '
+          gh release view "v1.1.0" --repo "$GITHUB_REPOSITORY" \
+            --json name,url,assets
